@@ -1,0 +1,56 @@
+import csv
+import re
+from selenium import webdriver
+import time
+from bs4 import BeautifulSoup
+
+
+chrome = r"C:\Users\Ishant\Downloads\chromedriver.exe" #chromedriver
+driver = webdriver.Chrome(chrome) #initialise chrome webdriver
+urls_page = ['https://wogma.com/movies/alphabetic/basic/#items_with_'+
+             str(i) for i in range(1, 10)] #pagenation links
+title_list = []
+review_list = []
+url_extension = 'https://wogma.com'
+
+driver.get('https://wogma.com/movies/alphabetic/basic/#items_with_1')
+try:
+        while True:  # used to simulate scrolling action of a webpage on selenium browser
+            last_height = driver.execute_script("return document.body.scrollHeight")
+            # Scroll down to bottom
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+            # Wait to load page
+            time.sleep(1.5)
+
+            # Calculate new scroll height and compare with last scroll height
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+except:
+        print
+        ''
+
+page = driver.page_source
+soup = BeautifulSoup(page, 'html.parser')
+review = soup.findAll('div', {"class": "button related_pages review "})  # get all div tags which contain 'a' tags
+
+for div in review:
+    try:
+        links = div.find_all('a')  # extract the required links only
+        print(div)
+        for j in links:
+            driver.get(url_extension + j['href'])
+            print(url_extension + j['href'])
+            page = driver.page_source
+            soup = BeautifulSoup(page, 'html.parser')
+            review = soup.find('div', {'class': 'wogma-review'})
+            review = review.text
+            review_list.append(review)
+            with open('C:\\Users\Ishant\Desktop\Scraped_Data_Unfound\\reviews.txt', 'a') as textfile:
+                textfile.write(review + '\n\n' + 'Break Here' + '\n\n')
+
+                textfile.close()
+    except Exception as e:
+        print('')
